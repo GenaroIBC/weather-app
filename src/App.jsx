@@ -4,17 +4,29 @@ import { getWeatherData } from "./services/getWeatherData";
 import { Card } from "./components/Card";
 import { useState } from "react";
 
+const INPUT_NAME = "city-name";
+
 function App() {
   const [weatherData, setWeatherData] = useState(null);
 
-  const getUserPosition = () => {
+  const getAndSetWeatherData = async (...params) => {
+    const weatherData = await getWeatherData(...params);
+    setWeatherData(weatherData);
+  };
+
+  const getWeatherDataByForm = e => {
+    e.preventDefault();
+    const inputValue = e.target[INPUT_NAME].value.trim();
+    if (!inputValue) return;
+    getAndSetWeatherData(inputValue);
+    e.target[INPUT_NAME].value = "";
+  };
+
+  const getWeatherDataByCoords = () => {
     const handleSuccess = async locationData => {
       const { latitude, longitude } = locationData.coords;
 
-      const weatherData = await getWeatherData(latitude, longitude);
-
-      setWeatherData(weatherData);
-      console.log(weatherData);
+      getAndSetWeatherData(latitude, longitude);
     };
 
     const handleError = error => {
@@ -29,11 +41,13 @@ function App() {
       <h1>The weather in your city</h1>
 
       <h2>Enter yout city</h2>
-      <SearchForm />
+      <SearchForm handleSubmit={getWeatherDataByForm} inputName={INPUT_NAME} />
 
       <p>or...</p>
 
-      <button onClick={getUserPosition}>Get your current position</button>
+      <button onClick={getWeatherDataByCoords}>
+        Get your current position
+      </button>
       {weatherData && <Card data={weatherData} />}
     </>
   );
